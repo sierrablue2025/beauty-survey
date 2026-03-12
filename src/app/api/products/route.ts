@@ -32,13 +32,26 @@ export async function POST(req: NextRequest) {
     const results: { category: string; items: Awaited<ReturnType<typeof searchRakutenItems>>; reason: string }[] = [];
     for (const cat of categories) {
       try {
-        const items = await searchRakutenItems({
+        let items = await searchRakutenItems({
           keyword: cat.keyword,
           hits: 4,
           minPrice: cat.minPrice,
           maxPrice: cat.maxPrice,
           sort: rakutenSort,
         });
+        // 0件なら価格フィルターを外して再検索
+        if (items.length === 0) {
+          items = await searchRakutenItems({
+            keyword: cat.keyword,
+            hits: 4,
+            sort: rakutenSort,
+          });
+        }
+        // それでも0件ならキーワードを短くして再検索
+        if (items.length === 0) {
+          const shortKeyword = cat.keyword.split(" ").slice(0, 2).join(" ");
+          items = await searchRakutenItems({ keyword: shortKeyword, hits: 4, sort: rakutenSort });
+        }
         results.push({ category: cat.label, items, reason: buildReason(cat.label, answers) });
       } catch {
         results.push({ category: cat.label, items: [], reason: buildReason(cat.label, answers) });
