@@ -3,6 +3,8 @@ import { SurveyAnswers } from "@/types/survey";
 export interface SkinDiagnosis {
   skinTypeLabel: string;
   skinTypeSummary: string;
+  ageGroup: string;
+  ageAdvice: string;
   concerns: string[];
   routineAdvice: string[];
   ingredientTips: string[];
@@ -57,6 +59,29 @@ const SKIN_TYPE_INFO: Record<string, { summary: string; routine: string[] }> = {
   },
 };
 
+const AGE_ADVICE: Record<string, { advice: string; ingredients: string }> = {
+  "10代": {
+    advice: "皮脂分泌が活発な時期です。洗顔と保湿の基本を丁寧に行うことが大切。ニキビができやすい場合は低刺激のアイテムを選びましょう。",
+    ingredients: "グリセリン・ヒアルロン酸・グリチルリチン酸2K",
+  },
+  "20代": {
+    advice: "肌のターンオーバーが整っている時期ですが、紫外線ダメージが蓄積し始めます。今から始める日焼け止めと保湿が将来の肌を守ります。",
+    ingredients: "ビタミンC誘導体・ヒアルロン酸・ナイアシンアミド",
+  },
+  "30代": {
+    advice: "コラーゲン生成が減少し始め、ほうれい線や毛穴の開きが気になる時期です。保湿に加えてエイジングケア成分を取り入れましょう。",
+    ingredients: "レチノール・ペプチド・セラミド・ナイアシンアミド",
+  },
+  "40代": {
+    advice: "ホルモンバランスの変化で肌の乾燥やたるみが出やすくなります。油分を補うリッチなテクスチャーのアイテムが効果的です。",
+    ingredients: "レチノール・コラーゲン・フラーレン・セラミド",
+  },
+  "50代以上": {
+    advice: "肌のバリア機能が低下し、乾燥・くすみ・たるみが顕著になる時期です。保湿とハリケアを軸に、やさしいケアを継続しましょう。",
+    ingredients: "セラミド・コエンザイムQ10・レチノール・ペプチド",
+  },
+};
+
 const CONCERN_ADVICE: Record<string, { advice: string; ingredient: string }> = {
   ニキビ: {
     advice: "過剰な皮脂と毛穴の詰まりが原因のことが多いです。保湿をしながら皮脂バランスを整えることが大切です。",
@@ -90,25 +115,27 @@ const CONCERN_ADVICE: Record<string, { advice: string; ingredient: string }> = {
 
 export function buildDiagnosis(answers: SurveyAnswers): SkinDiagnosis {
   const skinType = typeof answers.q1 === "string" ? answers.q1 : "普通肌";
+  const ageGroup = typeof answers.q_age === "string" ? answers.q_age : "20代";
   const skinConcerns = Array.isArray(answers.q3)
     ? answers.q3.filter((c) => c !== "特にない")
     : [];
   const severity = typeof answers.q4 === "string" ? answers.q4 : "";
 
   const typeInfo = SKIN_TYPE_INFO[skinType] ?? SKIN_TYPE_INFO["普通肌"];
+  const ageInfo = AGE_ADVICE[ageGroup] ?? AGE_ADVICE["20代"];
 
   const concernAdvice = skinConcerns
     .slice(0, 3)
     .map((c) => CONCERN_ADVICE[c]?.advice)
     .filter(Boolean) as string[];
 
-  const ingredientTips = skinConcerns
-    .slice(0, 3)
-    .map((c) => {
+  const ingredientTips = [
+    `【${ageGroup}におすすめ】${ageInfo.ingredients}`,
+    ...skinConcerns.slice(0, 2).map((c) => {
       const ing = CONCERN_ADVICE[c]?.ingredient;
       return ing ? `【${c}】${ing}` : null;
-    })
-    .filter(Boolean) as string[];
+    }).filter(Boolean) as string[],
+  ];
 
   const careLevel: "basic" | "intensive" =
     severity === "とても気になる" || skinConcerns.length >= 3
@@ -118,6 +145,8 @@ export function buildDiagnosis(answers: SurveyAnswers): SkinDiagnosis {
   return {
     skinTypeLabel: skinType,
     skinTypeSummary: typeInfo.summary,
+    ageGroup,
+    ageAdvice: ageInfo.advice,
     concerns: skinConcerns,
     routineAdvice: [...typeInfo.routine, ...concernAdvice],
     ingredientTips,

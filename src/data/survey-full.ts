@@ -6,6 +6,14 @@ export const surveyFull: SurveyDefinition = {
     "肌・メイク・髪のお悩みを教えてください。あなたに合った美容アイテムのご提案に役立てます。",
   questions: [
     {
+      id: "q_age",
+      label: "あなたの年代を教えてください",
+      type: "single",
+      required: true,
+      description: "年代に合ったケアをご提案します。",
+      options: ["10代", "20代", "30代", "40代", "50代以上"],
+    },
+    {
       id: "q1",
       label: "あなたの肌質を教えてください",
       type: "single",

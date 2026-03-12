@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
       try {
         let items = await searchRakutenItems({
           keyword: cat.keyword,
-          hits: 4,
+          hits: 6,
           minPrice: cat.minPrice,
           maxPrice: cat.maxPrice,
           sort: rakutenSort,
@@ -43,14 +43,14 @@ export async function POST(req: NextRequest) {
         if (items.length === 0) {
           items = await searchRakutenItems({
             keyword: cat.keyword,
-            hits: 4,
+            hits: 6,
             sort: rakutenSort,
           });
         }
         // それでも0件ならキーワードを短くして再検索
         if (items.length === 0) {
           const shortKeyword = cat.keyword.split(" ").slice(0, 2).join(" ");
-          items = await searchRakutenItems({ keyword: shortKeyword, hits: 4, sort: rakutenSort });
+          items = await searchRakutenItems({ keyword: shortKeyword, hits: 6, sort: rakutenSort });
         }
         results.push({ category: cat.label, items, reason: buildReason(cat.label, answers) });
       } catch {

@@ -122,11 +122,15 @@ export function ResultsView({ answers, onReset }: ResultsViewProps) {
               )}
             </div>
             <h3 className="text-[20px] font-bold text-[#3E3A39] mb-2">
-              あなたは <span className="text-[#C89A82]">{diagnosis.skinTypeLabel}</span> です
+              <span className="text-[#C89A82]">{diagnosis.ageGroup}</span>・<span className="text-[#C89A82]">{diagnosis.skinTypeLabel}</span> タイプ
             </h3>
-            <p className="text-[14px] text-[#6E6763] leading-relaxed mb-4">
+            <p className="text-[14px] text-[#6E6763] leading-relaxed mb-2">
               {diagnosis.skinTypeSummary}
             </p>
+            <div className="bg-[#FDF6F2] border border-[#EBDDD6] rounded-2xl px-4 py-3 mb-4">
+              <p className="text-[12px] font-semibold text-[#C89A82] mb-1">{diagnosis.ageGroup}の肌について</p>
+              <p className="text-[13px] text-[#6E6763] leading-relaxed">{diagnosis.ageAdvice}</p>
+            </div>
 
             {diagnosis.concerns.length > 0 && (
               <div className="flex flex-wrap gap-2 mb-4">
