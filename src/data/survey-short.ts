@@ -3,7 +3,7 @@ import { SurveyDefinition } from "@/types/survey";
 export const surveyShort: SurveyDefinition = {
   title: "美容かんたん診断",
   description:
-    "6つの質問に答えるだけで、あなたに合いそうな美容アイテムのご提案に役立てます。",
+    "5つの質問に答えるだけで、あなたに合いそうな美容アイテムのご提案に役立てます。",
   questions: [
     {
       id: "q_age",
@@ -55,22 +55,6 @@ export const surveyShort: SurveyDefinition = {
         "特にない",
       ],
       exclusiveOptions: ["特にない"],
-    },
-    {
-      id: "q5",
-      label: "化粧品を選ぶとき、何を重視しますか？",
-      type: "multiple",
-      required: true,
-      description: "あてはまるものをすべて選んでください。",
-      options: ["価格", "成分", "ブランド", "口コミ", "パッケージ", "香り"],
-    },
-    {
-      id: "q6",
-      label: "化粧品はどこで購入することが多いですか？",
-      type: "single",
-      required: true,
-      description: "もっとも近いものを1つ選んでください。",
-      options: ["ドラッグストア", "百貨店", "ネット通販", "SNS紹介", "美容クリニック"],
     },
   ],
 };
