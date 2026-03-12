@@ -69,11 +69,11 @@ function skinKeyword(skinType: string, concern: string): string {
 
 const MAKEUP_CONCERN_KEYWORDS: Record<string, string> = {
   メイク崩れ:         "崩れにくい ファンデーション",
-  発色が悪い:         "発色 リップ",
-  "カバー力が足りない": "カバー ファンデーション",
-  "毛穴が隠れない":    "毛穴カバー プライマー",
+  発色が悪い:         "発色 チーク コスメ",
+  "カバー力が足りない": "高カバー ファンデーション",
+  "毛穴が隠れない":    "毛穴 化粧下地",
   乾燥する:           "保湿 ファンデーション",
-  テカリやすい:        "テカリ防止 パウダー",
+  テカリやすい:        "テカリ防止 フェイスパウダー",
 };
 
 const HAIR_CONCERN_KEYWORDS: Record<string, string> = {
