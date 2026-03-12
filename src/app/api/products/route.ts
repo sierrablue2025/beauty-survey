@@ -29,8 +29,9 @@ export async function POST(req: NextRequest) {
     const categories = buildRecommendations(answers);
     const diagnosis = buildDiagnosis(answers);
 
-    const results = await Promise.all(
-      categories.map(async (cat) => {
+    const results: { category: string; items: Awaited<ReturnType<typeof searchRakutenItems>>; reason: string }[] = [];
+    for (const cat of categories) {
+      try {
         const items = await searchRakutenItems({
           keyword: cat.keyword,
           hits: 4,
@@ -38,9 +39,11 @@ export async function POST(req: NextRequest) {
           maxPrice: cat.maxPrice,
           sort: rakutenSort,
         });
-        return { category: cat.label, items, reason: buildReason(cat.label, answers) };
-      })
-    );
+        results.push({ category: cat.label, items, reason: buildReason(cat.label, answers) });
+      } catch {
+        results.push({ category: cat.label, items: [], reason: buildReason(cat.label, answers) });
+      }
+    }
 
     return NextResponse.json({ diagnosis, results });
   } catch (err) {
