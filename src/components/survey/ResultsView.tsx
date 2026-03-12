@@ -168,6 +168,27 @@ export function ResultsView({ answers, onReset }: ResultsViewProps) {
               </div>
             )}
 
+            {/* 食事・栄養アドバイス */}
+            {diagnosis.nutritionAdvice.length > 0 && (
+              <div className="mb-2">
+                <p className="text-[13px] font-semibold text-[#3E3A39] mb-2">
+                  積極的に摂りたい栄養素
+                </p>
+                <div className="flex flex-col gap-2">
+                  {diagnosis.nutritionAdvice.map((n, i) => (
+                    <div key={i} className="bg-[#FAF8F6] rounded-2xl p-3 border border-[#E7DED8]">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-[#D8B4A0]">🌿</span>
+                        <span className="text-[13px] font-semibold text-[#3E3A39]">{n.nutrient}</span>
+                      </div>
+                      <p className="text-[12px] text-[#6E6763] mb-1">{n.reason}</p>
+                      <p className="text-[12px] text-[#C89A82] font-medium">食材：{n.foods}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* おすすめ商品へスクロールボタン */}
             <button
               type="button"

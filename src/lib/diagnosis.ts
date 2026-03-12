@@ -1,5 +1,11 @@
 import { SurveyAnswers } from "@/types/survey";
 
+export interface NutritionAdvice {
+  nutrient: string;
+  reason: string;
+  foods: string;
+}
+
 export interface SkinDiagnosis {
   skinTypeLabel: string;
   skinTypeSummary: string;
@@ -8,6 +14,7 @@ export interface SkinDiagnosis {
   concerns: string[];
   routineAdvice: string[];
   ingredientTips: string[];
+  nutritionAdvice: NutritionAdvice[];
   careLevel: "basic" | "intensive";
 }
 
@@ -82,6 +89,47 @@ const AGE_ADVICE: Record<string, { advice: string; ingredients: string }> = {
   },
 };
 
+// 悩み別の栄養アドバイス
+const CONCERN_NUTRITION: Record<string, NutritionAdvice[]> = {
+  ニキビ: [
+    { nutrient: "ビタミンB2・B6", reason: "皮脂の分泌を抑え、肌荒れを防ぐ", foods: "納豆・卵・レバー・バナナ・鶏むね肉" },
+    { nutrient: "亜鉛", reason: "炎症を抑え、肌の修復を助ける", foods: "牡蠣・豚肉・ナッツ類・豆腐" },
+  ],
+  シミ: [
+    { nutrient: "ビタミンC", reason: "メラニン生成を抑え、美白効果をサポート", foods: "パプリカ・ブロッコリー・キウイ・レモン・イチゴ" },
+    { nutrient: "ビタミンE", reason: "酸化を防ぎ、シミの悪化を抑える", foods: "アーモンド・アボカド・かぼちゃ・ほうれん草" },
+  ],
+  毛穴: [
+    { nutrient: "ビタミンA", reason: "皮脂分泌を正常化し、毛穴の詰まりを改善", foods: "にんじん・かぼちゃ・レバー・うなぎ・小松菜" },
+    { nutrient: "食物繊維", reason: "腸内環境を整え、肌荒れを内側から改善", foods: "ごぼう・海藻類・キノコ・オートミール" },
+  ],
+  乾燥: [
+    { nutrient: "セラミド（食品由来）", reason: "肌の水分保持力を内側から高める", foods: "こんにゃく・小麦胚芽・大豆・米ぬか" },
+    { nutrient: "オメガ3脂肪酸", reason: "皮膚のバリア機能を強化し、潤いを保つ", foods: "鮭・サバ・いわし・くるみ・亜麻仁油" },
+  ],
+  シワ: [
+    { nutrient: "コラーゲン・ビタミンC", reason: "コラーゲン生成を促し、肌のハリを保つ", foods: "豚足・鶏手羽・魚の皮・ブロッコリー・パプリカ" },
+    { nutrient: "大豆イソフラボン", reason: "女性ホルモンに似た働きでハリと弾力をサポート", foods: "豆腐・納豆・豆乳・味噌・きなこ" },
+  ],
+  くすみ: [
+    { nutrient: "鉄分", reason: "血行を促進し、くすみのない明るい肌に", foods: "ほうれん草・レバー・あさり・ひじき・赤身肉" },
+    { nutrient: "ビタミンC", reason: "抗酸化作用でくすみの原因を防ぐ", foods: "パプリカ・キウイ・柑橘類・ブロッコリー" },
+  ],
+  赤み: [
+    { nutrient: "ビタミンK", reason: "毛細血管を強化し、赤みを落ち着かせる", foods: "納豆・ほうれん草・ブロッコリー・小松菜" },
+    { nutrient: "オメガ3脂肪酸", reason: "炎症を抑え、敏感な肌を落ち着かせる", foods: "青魚（サバ・いわし・鮭）・えごま油・くるみ" },
+  ],
+};
+
+// 肌タイプ別の基本栄養アドバイス
+const SKIN_TYPE_NUTRITION: Record<string, NutritionAdvice> = {
+  乾燥肌: { nutrient: "水分＋良質な脂質", reason: "肌の内側から潤いを補う", foods: "アボカド・オリーブオイル・鮭・水2L/日" },
+  脂性肌: { nutrient: "ビタミンB群", reason: "皮脂の過剰分泌をコントロール", foods: "玄米・豚肉・卵・ブロッコリー・納豆" },
+  混合肌: { nutrient: "ビタミンB2＋保湿食材", reason: "皮脂バランスを整えながら保湿もサポート", foods: "卵・乳製品・アボカド・ナッツ類" },
+  敏感肌: { nutrient: "腸活食材＋抗炎症成分", reason: "腸内環境を整えて肌の過敏反応を和らげる", foods: "ヨーグルト・発酵食品・青魚・緑黄色野菜" },
+  普通肌: { nutrient: "バランスのよい食事", reason: "現在の良い状態をキープするために栄養バランスを維持", foods: "野菜・魚・大豆製品・発酵食品を意識して摂取" },
+};
+
 const CONCERN_ADVICE: Record<string, { advice: string; ingredient: string }> = {
   ニキビ: {
     advice: "過剰な皮脂と毛穴の詰まりが原因のことが多いです。保湿をしながら皮脂バランスを整えることが大切です。",
@@ -142,6 +190,12 @@ export function buildDiagnosis(answers: SurveyAnswers): SkinDiagnosis {
       ? "intensive"
       : "basic";
 
+  // 栄養アドバイス：肌タイプ基本 + 悩み上位2つ
+  const nutritionAdvice: NutritionAdvice[] = [
+    SKIN_TYPE_NUTRITION[skinType] ?? SKIN_TYPE_NUTRITION["普通肌"],
+    ...skinConcerns.slice(0, 2).flatMap((c) => CONCERN_NUTRITION[c] ?? []),
+  ];
+
   return {
     skinTypeLabel: skinType,
     skinTypeSummary: typeInfo.summary,
@@ -150,6 +204,7 @@ export function buildDiagnosis(answers: SurveyAnswers): SkinDiagnosis {
     concerns: skinConcerns,
     routineAdvice: [...typeInfo.routine, ...concernAdvice],
     ingredientTips,
+    nutritionAdvice,
     careLevel,
   };
 }
