@@ -14,7 +14,7 @@ export function NavigationButtons({ onBack, onNext, isFirst, isLast }: Navigatio
         <button
           type="button"
           onClick={onBack}
-          className="flex-1 h-[52px] rounded-full border border-[#D8B4A0] text-[#D8B4A0] text-[16px] font-semibold transition-colors hover:bg-[#FAF8F6] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#D8B4A0]"
+          className="flex-1 h-[56px] rounded-full border border-[#D8B4A0] text-[#D8B4A0] text-[16px] font-semibold transition-colors hover:bg-[#FAF8F6] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#D8B4A0]"
         >
           戻る
         </button>
@@ -23,7 +23,7 @@ export function NavigationButtons({ onBack, onNext, isFirst, isLast }: Navigatio
         type="button"
         onClick={onNext}
         className={[
-          "h-[52px] rounded-full bg-[#D8B4A0] text-white text-[16px] font-semibold transition-colors",
+          "h-[56px] rounded-full bg-[#D8B4A0] text-white text-[16px] font-semibold transition-colors",
           "hover:bg-[#C89A82] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C89A82]",
           isFirst ? "w-full" : "flex-[2]",
         ].join(" ")}

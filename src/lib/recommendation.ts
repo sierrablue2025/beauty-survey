@@ -8,10 +8,10 @@ export interface RecommendationCategory {
 }
 
 const BUDGET_RANGE: Record<string, { min?: number; max?: number }> = {
-  "〜3,000円": { max: 3000 },
-  "3,000〜5,000円": { min: 3000, max: 5000 },
-  "5,000〜10,000円": { min: 5000, max: 10000 },
-  "10,000円以上": { min: 10000 },
+  "〜3,000円": { max: 3500 },
+  "3,000〜5,000円": { min: 2500, max: 5500 },
+  "5,000〜10,000円": { min: 4500, max: 11000 },
+  "10,000円以上": { min: 9000 },
 };
 
 // 肌タイプ × 悩みの組み合わせで最適なキーワードを生成

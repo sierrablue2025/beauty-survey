@@ -13,7 +13,7 @@ export function OptionButton({ label, selected, exclusive = false, onClick }: Op
       type="button"
       onClick={onClick}
       className={[
-        "w-full min-h-[52px] px-4 py-[14px] rounded-2xl border text-left text-[16px] font-medium transition-all duration-150",
+        "w-full min-h-[56px] px-4 py-4 rounded-2xl border text-left text-[16px] font-medium transition-all duration-150",
         "focus:outline-none focus-visible:ring-2 focus-visible:ring-[#D8B4A0] focus-visible:ring-offset-1",
         selected
           ? "bg-[#F5EDE8] border-[#D8B4A0] text-[#3E3A39]"

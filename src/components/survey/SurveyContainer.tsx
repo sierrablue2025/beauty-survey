@@ -30,14 +30,27 @@ export function SurveyContainer({ survey }: SurveyContainerProps) {
   const [animating, setAnimating] = useState(false);
   const [savedResult, setSavedResult] = useState<SavedResult | null>(null);
 
-  // 前回の結果をlocalStorageから読み込む
+  // 前回の結果をlocalStorageから読み込む（回答がまだない場合は自動復元）
   useEffect(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) setSavedResult(JSON.parse(raw));
+      if (raw) {
+        const parsed: SavedResult = JSON.parse(raw);
+        setSavedResult(parsed);
+        // 回答がまだ始まっていなければ自動的に結果を復元
+        setAnswers((prev) => {
+          if (Object.keys(prev).length === 0) {
+            setCompleted(true);
+            setShowResults(true);
+            return parsed.answers;
+          }
+          return prev;
+        });
+      }
     } catch {
       // ignore
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const visibleQuestions = getVisibleQuestions(survey.questions, answers);

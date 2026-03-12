@@ -11,12 +11,15 @@ import { ShareButtons } from "./ShareButtons";
 interface ProductCategory {
   category: string;
   items: RakutenItem[];
+  reason?: string;
 }
 
 interface ResultsViewProps {
   answers: SurveyAnswers;
   onReset: () => void;
 }
+
+type SortOption = "reviewCount" | "price_asc" | "price_desc";
 
 function AmazonSearchLink({ keyword }: { keyword: string }) {
   const tag = process.env.NEXT_PUBLIC_AMAZON_ASSOCIATE_TAG;
@@ -38,27 +41,37 @@ export function ResultsView({ answers, onReset }: ResultsViewProps) {
   const [results, setResults] = useState<ProductCategory[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [sort, setSort] = useState<SortOption>("reviewCount");
+  const [retryCount, setRetryCount] = useState(0);
 
   useEffect(() => {
+    let cancelled = false;
     async function fetchProducts() {
+      setLoading(true);
+      setError("");
       try {
         const res = await fetch("/api/products", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(answers),
+          body: JSON.stringify({ answers, sort }),
         });
         if (!res.ok) throw new Error("fetch failed");
         const data = await res.json();
-        setDiagnosis(data.diagnosis ?? null);
-        setResults(data.results ?? []);
+        if (!cancelled) {
+          setDiagnosis(data.diagnosis ?? null);
+          setResults(data.results ?? []);
+        }
       } catch {
-        setError("商品の取得に失敗しました。しばらくしてからお試しください。");
+        if (!cancelled) {
+          setError("商品の取得に失敗しました。しばらくしてからお試しください。");
+        }
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     }
     fetchProducts();
-  }, [answers]);
+    return () => { cancelled = true; };
+  }, [answers, sort, retryCount]);
 
   return (
     <div>
@@ -83,7 +96,14 @@ export function ResultsView({ answers, onReset }: ResultsViewProps) {
 
       {error && (
         <div className="bg-white rounded-2xl border border-[#E7DED8] p-6 text-center">
-          <p className="text-[14px] text-[#C65B5B]">{error}</p>
+          <p className="text-[14px] text-[#C65B5B] mb-3">{error}</p>
+          <button
+            type="button"
+            onClick={() => setRetryCount((c) => c + 1)}
+            className="h-10 px-6 rounded-full bg-[#D8B4A0] text-white text-[14px] font-semibold hover:bg-[#C89A82] transition-colors"
+          >
+            再試行する
+          </button>
         </div>
       )}
 
@@ -134,7 +154,7 @@ export function ResultsView({ answers, onReset }: ResultsViewProps) {
             </div>
 
             {diagnosis.ingredientTips.length > 0 && (
-              <div>
+              <div className="mb-4">
                 <p className="text-[13px] font-semibold text-[#3E3A39] mb-2">注目したい成分</p>
                 <ul className="flex flex-col gap-1">
                   {diagnosis.ingredientTips.map((tip, i) => (
@@ -143,19 +163,53 @@ export function ResultsView({ answers, onReset }: ResultsViewProps) {
                 </ul>
               </div>
             )}
+
+            {/* おすすめ商品へスクロールボタン */}
+            <button
+              type="button"
+              onClick={() => document.getElementById("products-section")?.scrollIntoView({ behavior: "smooth" })}
+              className="w-full mt-2 h-10 rounded-full border border-[#D8B4A0] text-[#D8B4A0] text-[14px] font-semibold hover:bg-[#FAF8F6] transition-colors"
+            >
+              おすすめ商品を見る ↓
+            </button>
           </div>
 
           {/* SNSシェア */}
           <ShareButtons skinType={diagnosis.skinTypeLabel} />
 
           {/* おすすめ商品 */}
-          <div className="mb-2">
+          <div id="products-section" className="mb-2">
             <h3 className="text-[16px] font-bold text-[#3E3A39] px-1 mb-1">
               あなたへのおすすめアイテム
             </h3>
-            <p className="text-[13px] text-[#6E6763] px-1 mb-4">
+            <p className="text-[13px] text-[#6E6763] px-1 mb-3">
               診断結果をもとに楽天から厳選しました
             </p>
+            {/* 並び替えボタン */}
+            <div className="flex gap-2 mb-4 px-1">
+              {(["reviewCount", "price_asc", "price_desc"] as SortOption[]).map((opt) => {
+                const labels: Record<SortOption, string> = {
+                  reviewCount: "レビュー順",
+                  price_asc: "価格が安い順",
+                  price_desc: "価格が高い順",
+                };
+                return (
+                  <button
+                    key={opt}
+                    type="button"
+                    onClick={() => setSort(opt)}
+                    className={[
+                      "flex-1 h-9 rounded-full text-[12px] font-semibold border transition-colors",
+                      sort === opt
+                        ? "bg-[#D8B4A0] text-white border-[#D8B4A0]"
+                        : "bg-white text-[#6E6763] border-[#E7DED8] hover:border-[#D8B4A0]",
+                    ].join(" ")}
+                  >
+                    {labels[opt]}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           {results.map((cat) => (
@@ -172,7 +226,7 @@ export function ResultsView({ answers, onReset }: ResultsViewProps) {
               ) : (
                 <div className="grid grid-cols-2 gap-3">
                   {cat.items.map((item, i) => (
-                    <ProductCard key={i} item={item} />
+                    <ProductCard key={i} item={item} reason={cat.reason} />
                   ))}
                 </div>
               )}
