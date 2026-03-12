@@ -10,6 +10,13 @@ import { NavigationButtons } from "./NavigationButtons";
 import { CompletionView } from "./CompletionView";
 import { ResultsView } from "./ResultsView";
 
+const STORAGE_KEY = "beauty_survey_last_result";
+
+interface SavedResult {
+  answers: SurveyAnswers;
+  savedAt: string;
+}
+
 interface SurveyContainerProps {
   survey: SurveyDefinition;
 }
@@ -21,13 +28,23 @@ export function SurveyContainer({ survey }: SurveyContainerProps) {
   const [completed, setCompleted] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const [animating, setAnimating] = useState(false);
+  const [savedResult, setSavedResult] = useState<SavedResult | null>(null);
+
+  // 前回の結果をlocalStorageから読み込む
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) setSavedResult(JSON.parse(raw));
+    } catch {
+      // ignore
+    }
+  }, []);
 
   const visibleQuestions = getVisibleQuestions(survey.questions, answers);
   const currentQuestion = visibleQuestions[currentIndex];
   const isFirst = currentIndex === 0;
   const isLast = currentIndex === visibleQuestions.length - 1;
 
-  // スクロールを上部に戻す
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [currentIndex]);
@@ -52,21 +69,27 @@ export function SurveyContainer({ survey }: SurveyContainerProps) {
     }
 
     if (isLast) {
-      // 送信処理（将来的にSupabaseやAPIに差し替え）
       const submissionData = {
         surveyTitle: survey.title,
         submittedAt: new Date().toISOString(),
         answers: Object.fromEntries(
           visibleQuestions.map((q) => [
             q.id,
-            {
-              label: q.label,
-              value: answers[q.id] ?? null,
-            },
+            { label: q.label, value: answers[q.id] ?? null },
           ])
         ),
       };
       console.log("[Survey] 送信データ:", JSON.stringify(submissionData, null, 2));
+
+      // localStorageに保存
+      try {
+        const toSave: SavedResult = { answers, savedAt: new Date().toISOString() };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
+        setSavedResult(toSave);
+      } catch {
+        // ignore
+      }
+
       setCompleted(true);
       return;
     }
@@ -93,6 +116,13 @@ export function SurveyContainer({ survey }: SurveyContainerProps) {
     setCompleted(false);
     setShowResults(false);
   }, []);
+
+  const handleRestorePrevious = useCallback(() => {
+    if (!savedResult) return;
+    setAnswers(savedResult.answers);
+    setCompleted(true);
+    setShowResults(true);
+  }, [savedResult]);
 
   if (completed && showResults) {
     return (
@@ -123,10 +153,27 @@ export function SurveyContainer({ survey }: SurveyContainerProps) {
     <div className="min-h-screen bg-[#FAF8F6] px-4 py-10">
       <div className="max-w-[640px] mx-auto">
         <SurveyHeader title={survey.title} description={survey.description} />
-        <ProgressBar
-          current={currentIndex + 1}
-          total={visibleQuestions.length}
-        />
+
+        {/* 前回の診断結果バナー */}
+        {savedResult && (
+          <div className="bg-white border border-[#E7DED8] rounded-2xl px-4 py-3 mb-4 flex items-center justify-between gap-3">
+            <div>
+              <p className="text-[13px] font-semibold text-[#3E3A39]">前回の診断結果があります</p>
+              <p className="text-[12px] text-[#6E6763]">
+                {new Date(savedResult.savedAt).toLocaleDateString("ja-JP")} に回答済み
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={handleRestorePrevious}
+              className="flex-shrink-0 h-9 px-4 rounded-full bg-[#D8B4A0] text-white text-[13px] font-semibold hover:bg-[#C89A82] transition-colors"
+            >
+              結果を見る
+            </button>
+          </div>
+        )}
+
+        <ProgressBar current={currentIndex + 1} total={visibleQuestions.length} />
         <div
           className={[
             "transition-all duration-200 ease-out",

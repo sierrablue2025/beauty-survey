@@ -5,6 +5,8 @@ import { SurveyAnswers } from "@/types/survey";
 import { RakutenItem } from "@/lib/rakuten-api";
 import { SkinDiagnosis } from "@/lib/diagnosis";
 import { ProductCard } from "./ProductCard";
+import { SkeletonCard, SkeletonDiagnosis } from "./SkeletonCard";
+import { ShareButtons } from "./ShareButtons";
 
 interface ProductCategory {
   category: string;
@@ -14,6 +16,21 @@ interface ProductCategory {
 interface ResultsViewProps {
   answers: SurveyAnswers;
   onReset: () => void;
+}
+
+function AmazonSearchLink({ keyword }: { keyword: string }) {
+  const tag = process.env.NEXT_PUBLIC_AMAZON_ASSOCIATE_TAG;
+  const url = `https://www.amazon.co.jp/s?k=${encodeURIComponent(keyword)}${tag ? `&tag=${tag}` : ""}`;
+  return (
+    <a
+      href={url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="inline-flex items-center gap-1.5 text-[13px] text-[#6E6763] border border-[#E7DED8] rounded-full px-3 py-1.5 hover:bg-[#FAF8F6] transition-colors mt-1"
+    >
+      <span>Amazonでも探す →</span>
+    </a>
+  );
 }
 
 export function ResultsView({ answers, onReset }: ResultsViewProps) {
@@ -54,11 +71,14 @@ export function ResultsView({ answers, onReset }: ResultsViewProps) {
         </p>
       </div>
 
+      {/* スケルトン */}
       {loading && (
-        <div className="text-center py-12">
-          <div className="inline-block w-8 h-8 border-2 border-[#D8B4A0] border-t-transparent rounded-full animate-spin mb-3" />
-          <p className="text-[14px] text-[#6E6763]">診断中…</p>
-        </div>
+        <>
+          <SkeletonDiagnosis />
+          <div className="grid grid-cols-2 gap-3 mb-6">
+            {[1, 2, 3, 4].map((i) => <SkeletonCard key={i} />)}
+          </div>
+        </>
       )}
 
       {error && (
@@ -101,7 +121,6 @@ export function ResultsView({ answers, onReset }: ResultsViewProps) {
               </div>
             )}
 
-            {/* おすすめルーティン */}
             <div className="bg-[#FAF8F6] rounded-2xl p-4 mb-4">
               <p className="text-[13px] font-semibold text-[#3E3A39] mb-2">おすすめのケア習慣</p>
               <ul className="flex flex-col gap-2">
@@ -114,24 +133,26 @@ export function ResultsView({ answers, onReset }: ResultsViewProps) {
               </ul>
             </div>
 
-            {/* 注目成分 */}
             {diagnosis.ingredientTips.length > 0 && (
               <div>
                 <p className="text-[13px] font-semibold text-[#3E3A39] mb-2">注目したい成分</p>
                 <ul className="flex flex-col gap-1">
                   {diagnosis.ingredientTips.map((tip, i) => (
-                    <li key={i} className="text-[13px] text-[#6E6763]">
-                      {tip}
-                    </li>
+                    <li key={i} className="text-[13px] text-[#6E6763]">{tip}</li>
                   ))}
                 </ul>
               </div>
             )}
           </div>
 
+          {/* SNSシェア */}
+          <ShareButtons skinType={diagnosis.skinTypeLabel} />
+
           {/* おすすめ商品 */}
           <div className="mb-2">
-            <h3 className="text-[16px] font-bold text-[#3E3A39] px-1 mb-1">あなたへのおすすめアイテム</h3>
+            <h3 className="text-[16px] font-bold text-[#3E3A39] px-1 mb-1">
+              あなたへのおすすめアイテム
+            </h3>
             <p className="text-[13px] text-[#6E6763] px-1 mb-4">
               診断結果をもとに楽天から厳選しました
             </p>
@@ -139,10 +160,13 @@ export function ResultsView({ answers, onReset }: ResultsViewProps) {
 
           {results.map((cat) => (
             <div key={cat.category} className="mb-8">
-              <h4 className="text-[15px] font-semibold text-[#3E3A39] mb-3 px-1 flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#D8B4A0] inline-block" />
-                {cat.category}
-              </h4>
+              <div className="flex items-center justify-between mb-3 px-1">
+                <h4 className="text-[15px] font-semibold text-[#3E3A39] flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#D8B4A0] inline-block" />
+                  {cat.category}
+                </h4>
+                <AmazonSearchLink keyword={cat.category.replace(/[（）・対策向け]/g, " ")} />
+              </div>
               {cat.items.length === 0 ? (
                 <p className="text-[14px] text-[#6E6763] px-1">該当商品が見つかりませんでした。</p>
               ) : (
