@@ -21,6 +21,11 @@ interface ResultsViewProps {
 
 type SortOption = "reviewCount" | "price_asc" | "price_desc";
 
+interface PopularCategory {
+  category: string;
+  items: RakutenItem[];
+}
+
 function AmazonSearchLink({ keyword }: { keyword: string }) {
   const tag = process.env.NEXT_PUBLIC_AMAZON_ASSOCIATE_TAG;
   const url = `https://www.amazon.co.jp/s?k=${encodeURIComponent(keyword)}${tag ? `&tag=${tag}` : ""}`;
@@ -43,6 +48,8 @@ export function ResultsView({ answers, onReset }: ResultsViewProps) {
   const [error, setError] = useState("");
   const [sort, setSort] = useState<SortOption>("reviewCount");
   const [retryCount, setRetryCount] = useState(0);
+  const [popularResults, setPopularResults] = useState<PopularCategory[]>([]);
+  const [popularLoading, setPopularLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
@@ -72,6 +79,25 @@ export function ResultsView({ answers, onReset }: ResultsViewProps) {
     fetchProducts();
     return () => { cancelled = true; };
   }, [answers, sort, retryCount]);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function fetchPopular() {
+      setPopularLoading(true);
+      try {
+        const res = await fetch("/api/popular");
+        if (!res.ok) throw new Error("fetch failed");
+        const data = await res.json();
+        if (!cancelled) setPopularResults(data.results ?? []);
+      } catch {
+        // サイレントに失敗（人気商品はオプション）
+      } finally {
+        if (!cancelled) setPopularLoading(false);
+      }
+    }
+    fetchPopular();
+    return () => { cancelled = true; };
+  }, []);
 
   return (
     <div>
@@ -258,6 +284,41 @@ export function ResultsView({ answers, onReset }: ResultsViewProps) {
             </div>
           ))}
         </>
+      )}
+
+      {/* 口コミ人気アイテム */}
+      {(popularLoading || popularResults.length > 0) && (
+        <div className="mb-8">
+          <div className="flex items-center gap-2 mb-1 px-1">
+            <span className="text-[18px]">🏆</span>
+            <h3 className="text-[16px] font-bold text-[#3E3A39]">楽天で人気のアイテム</h3>
+          </div>
+          <p className="text-[13px] text-[#6E6763] px-1 mb-4">口コミ件数が多い人気商品をピックアップ</p>
+          {popularLoading ? (
+            <div className="grid grid-cols-2 gap-3">
+              {[1, 2, 3, 4].map((i) => <SkeletonCard key={i} />)}
+            </div>
+          ) : (
+            popularResults.map((cat) => (
+              <div key={cat.category} className="mb-6">
+                <div className="flex items-center justify-between mb-3 px-1">
+                  <h4 className="text-[15px] font-semibold text-[#3E3A39] flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#C89A82] inline-block" />
+                    {cat.category}
+                  </h4>
+                  <AmazonSearchLink keyword={cat.category.replace("人気の", "")} />
+                </div>
+                {cat.items.length === 0 ? null : (
+                  <div className="grid grid-cols-2 gap-3">
+                    {cat.items.map((item, i) => (
+                      <ProductCard key={i} item={item} />
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))
+          )}
+        </div>
       )}
 
       <div className="mt-4 mb-8">
