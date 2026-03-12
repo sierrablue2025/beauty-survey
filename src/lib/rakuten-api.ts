@@ -25,12 +25,16 @@ export async function searchRakutenItems(
   params: RakutenSearchParams
 ): Promise<RakutenItem[]> {
   const appId = process.env.RAKUTEN_APP_ID;
+  const accessKey = process.env.RAKUTEN_ACCESS_KEY;
   const affiliateId = process.env.RAKUTEN_AFFILIATE_ID;
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://beauty-survey.vercel.app";
 
   if (!appId) throw new Error("RAKUTEN_APP_ID is not set");
+  if (!accessKey) throw new Error("RAKUTEN_ACCESS_KEY is not set");
 
   const query = new URLSearchParams({
     applicationId: appId,
+    accessKey: accessKey,
     format: "json",
     keyword: params.keyword,
     hits: String(params.hits ?? 6),
@@ -41,12 +45,18 @@ export async function searchRakutenItems(
   });
 
   const res = await fetch(
-    `https://app.rakuten.co.jp/services/api/IchibaItem/Search/20170706?${query}`,
-    { next: { revalidate: 3600 } }
+    `https://openapi.rakuten.co.jp/ichibams/api/IchibaItem/Search/20220601?${query}`,
+    {
+      headers: {
+        Origin: siteUrl,
+      },
+      next: { revalidate: 3600 },
+    }
   );
 
   if (!res.ok) {
-    throw new Error(`Rakuten API error: ${res.status}`);
+    const err = await res.text();
+    throw new Error(`Rakuten API error: ${res.status} ${err}`);
   }
 
   const data: RakutenApiResponse = await res.json();
