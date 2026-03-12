@@ -5,7 +5,7 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ item }: ProductCardProps) {
-  const imageUrl = item.mediumImageUrls?.[0]?.imageUrl;
+  const imageUrl = item.mediumImageUrls?.[0]?.imageUrl?.replace("_ex=128x128", "_ex=400x400");
   const url = item.affiliateUrl || item.itemUrl;
 
   return (
